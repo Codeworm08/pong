@@ -34,6 +34,7 @@ typedef struct Paddle
 {
     int posX; 
     float posY;
+    int score;
 }Paddle;
 
 typedef struct Ball
@@ -42,7 +43,7 @@ typedef struct Ball
     int speedX;
     int speedY;
     float posX;
-    float posY;
+    float posY;        
 }Ball;
 
 Paddle leftPaddle,rightPaddle;
@@ -57,15 +58,17 @@ void GameInit()
      
     leftPaddle.posX=0;
     leftPaddle.posY=400-(int)(height/2);
+    leftPaddle.score=0;
     
 
     rightPaddle.posX=1200-width;
     rightPaddle.posY=400-(int)(height/2);
+    rightPaddle.score=0;
 
     ball.radius = 10.0f;
     ball.posX = 600;
     ball.posY = 400;
-    ball.speedX = 180;
+    ball.speedX = 300;
     ball.speedY = 0;
 }
 
@@ -107,6 +110,22 @@ void UpdatePlayer()
         rightPaddle.posY += GetFrameTime()*speed;
 }
 
+void Score()
+{
+    if(ball.posX<0)
+    {
+        ball.posX=width+10;
+        ball.speedX=180;
+        rightPaddle.score++;
+    }
+    if(ball.posX>1200)
+    {
+        ball.posX=1200-width-10;
+        ball.speedX=-180;
+        leftPaddle.score++;
+    }
+}
+
 void Hit()
 {
     Vector2 circle = {ball.posX,ball.posY};
@@ -124,12 +143,14 @@ void Hit()
     };
     if(CheckCollisionCircleRec(circle,ball.radius,leftPaddleRec))
     {
-        ball.speedX = -ball.speedX;
+        ball.speedX = -ball.speedX *1.03;
+        ball.posX = leftPaddle.posX+width;        
         
     }
     if(CheckCollisionCircleRec(circle,ball.radius,rightPaddleRec))
     {
-        ball.speedX = -ball.speedX;
+        ball.speedX = -ball.speedX *1.03;
+        ball.posX = rightPaddle.posX-width;
     }    
     
 }
@@ -139,6 +160,20 @@ void UpdateBall()
     ball.posX += GetFrameTime()*ball.speedX;
     ball.posY += GetFrameTime()*ball.speedY;
     
+}
+
+void Wall()
+{
+    if(ball.posY<0)
+    {
+        ball.posY=0;
+        ball.speedY=-ball.speedY;
+    }
+    if(ball.posY>800)
+    {
+        ball.posY=800;
+        ball.speedY=-ball.speedY;
+    }
 }
 
 int main()
@@ -153,6 +188,7 @@ int main()
         UpdatePlayer();
         UpdateBall();
         Hit();
+        Score();
         GameDraw();
     }
     GameCleanup();
