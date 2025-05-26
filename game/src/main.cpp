@@ -65,7 +65,7 @@ void GameInit()
     ball.radius = 10.0f;
     ball.posX = 600;
     ball.posY = 400;
-    ball.speedX = 120;
+    ball.speedX = 180;
     ball.speedY = 0;
 }
 
@@ -107,6 +107,33 @@ void UpdatePlayer()
         rightPaddle.posY += GetFrameTime()*speed;
 }
 
+void Hit()
+{
+    Vector2 circle = {ball.posX,ball.posY};
+    Rectangle leftPaddleRec ={
+        leftPaddle.posX,
+        leftPaddle.posY,
+        width,
+        height        
+    };
+    Rectangle rightPaddleRec ={
+        rightPaddle.posX,
+        rightPaddle.posY,
+        width,
+        height        
+    };
+    if(CheckCollisionCircleRec(circle,ball.radius,leftPaddleRec))
+    {
+        ball.speedX = -ball.speedX;
+        
+    }
+    if(CheckCollisionCircleRec(circle,ball.radius,rightPaddleRec))
+    {
+        ball.speedX = -ball.speedX;
+    }    
+    
+}
+
 void UpdateBall()
 {
     ball.posX += GetFrameTime()*ball.speedX;
@@ -125,6 +152,7 @@ int main()
             break;
         UpdatePlayer();
         UpdateBall();
+        Hit();
         GameDraw();
     }
     GameCleanup();
