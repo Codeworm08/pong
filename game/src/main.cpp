@@ -28,6 +28,8 @@ Use this as a starting point or replace it with your code.
 #include "game.h"   // an external header in this project
 #include "lib.h"	// an external header in the static lib project
 
+#define SPEEDX 500
+#define SPEEDY 300
 int width = 40;
 int height = 100;
 typedef struct Paddle
@@ -68,8 +70,8 @@ void GameInit()
     ball.radius = 10.0f;
     ball.posX = 600;
     ball.posY = 400;
-    ball.speedX = 300;
-    ball.speedY = 0;
+    ball.speedX = SPEEDX;
+    ball.speedY = SPEEDY;
 }
 
 void GameCleanup()
@@ -89,7 +91,8 @@ void GameDraw()
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
-    DrawText("Hello Raylib!", 10, 10, 20, GetTextColor());
+    DrawText(TextFormat("%i",leftPaddle.score), 10, 10, 40, PURPLE);
+    DrawText(TextFormat("%i",rightPaddle.score), 1140, 10, 40, PURPLE);
 
     DrawRectangle(leftPaddle.posX,(int)leftPaddle.posY,width,height,PURPLE);
     DrawRectangle(rightPaddle.posX,(int)rightPaddle.posY,width,height,PURPLE);
@@ -115,13 +118,13 @@ void Score()
     if(ball.posX<0)
     {
         ball.posX=width+10;
-        ball.speedX=180;
+        ball.speedX=SPEEDX;
         rightPaddle.score++;
     }
     if(ball.posX>1200)
     {
         ball.posX=1200-width-10;
-        ball.speedX=-180;
+        ball.speedX=-SPEEDX;
         leftPaddle.score++;
     }
 }
@@ -143,14 +146,16 @@ void Hit()
     };
     if(CheckCollisionCircleRec(circle,ball.radius,leftPaddleRec))
     {
-        ball.speedX = -ball.speedX *1.03;
-        ball.posX = leftPaddle.posX+width;        
+        if(ball.speedX<0)
+            ball.speedX = -ball.speedX;
+        //ball.posX = leftPaddle.posX+width;        
         
     }
     if(CheckCollisionCircleRec(circle,ball.radius,rightPaddleRec))
     {
-        ball.speedX = -ball.speedX *1.03;
-        ball.posX = rightPaddle.posX-width;
+        if(ball.speedX>0)
+            ball.speedX = -ball.speedX *1.03;
+        //ball.posX = rightPaddle.posX-width;
     }    
     
 }
@@ -164,16 +169,12 @@ void UpdateBall()
 
 void Wall()
 {
-    if(ball.posY<0)
-    {
-        ball.posY=0;
-        ball.speedY=-ball.speedY;
-    }
-    if(ball.posY>800)
-    {
-        ball.posY=800;
-        ball.speedY=-ball.speedY;
-    }
+    if(ball.posY-ball.radius<0)        
+        ball.speedY *=-1;
+    
+    if(ball.posY+ball.radius>800)
+        ball.speedY *=-1;
+
 }
 
 int main()
@@ -187,6 +188,7 @@ int main()
             break;
         UpdatePlayer();
         UpdateBall();
+        Wall();
         Hit();
         Score();
         GameDraw();
