@@ -54,6 +54,8 @@ void GameInit()
 {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     InitWindow(InitialWidth, InitialHeight, "Example");
+    InitAudioDevice();
+    
     SetTargetFPS(144);
 
     // load resources
@@ -121,7 +123,7 @@ void Score()
         ball.speedX=SPEEDX;
         rightPaddle.score++;
     }
-    if(ball.posX>1200)
+    if(ball.posX>GetScreenWidth()-width)
     {
         ball.posX=1200-width-10;
         ball.speedX=-SPEEDX;
@@ -129,7 +131,7 @@ void Score()
     }
 }
 
-void Hit()
+void Hit(Sound hit)
 {
     Vector2 circle = {ball.posX,ball.posY};
     Rectangle leftPaddleRec ={
@@ -144,17 +146,26 @@ void Hit()
         width,
         height        
     };
+    
     if(CheckCollisionCircleRec(circle,ball.radius,leftPaddleRec))
     {
+        PlaySound(hit);
         if(ball.speedX<0)
-            ball.speedX = -ball.speedX;
+        {
+            ball.speedX = -ball.speedX;            
+        }
+            
         //ball.posX = leftPaddle.posX+width;        
         
     }
     if(CheckCollisionCircleRec(circle,ball.radius,rightPaddleRec))
     {
+        PlaySound(hit);
         if(ball.speedX>0)
+        {
             ball.speedX = -ball.speedX *1.03;
+            PlaySound(hit);
+        }
         //ball.posX = rightPaddle.posX-width;
     }    
     
@@ -181,7 +192,7 @@ int main()
 {
     
     GameInit();
-    
+    Sound hit = LoadSound("resources/hit.wav");
     while (!WindowShouldClose())
     {
         if (!GameUpdate())
@@ -189,10 +200,12 @@ int main()
         UpdatePlayer();
         UpdateBall();
         Wall();
-        Hit();
+        Hit(hit);
         Score();
         GameDraw();
     }
+    UnloadSound(hit);
+    CloseAudioDevice();
     GameCleanup();
 
     return 0;
