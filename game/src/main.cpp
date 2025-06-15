@@ -88,15 +88,32 @@ bool GameUpdate()
     return true;
 }
 
-void GameDraw()
+void GameDraw(Texture2D paddleTexture)
 {
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
+    Vector2 leftPosition = {leftPaddle.posX, leftPaddle.posY};
+    float scale = 2.0f;
+    float rotation = 0.0f;
+    Rectangle source = { 0, 0, paddleTexture.width, paddleTexture.height };
+    Vector2 origin = { paddleTexture.width / 2.0f, paddleTexture.height / 2.0f };
+    Vector2 position = { leftPaddle.posX, leftPaddle.posY };
+    Rectangle dest = {
+        position.x,
+        position.y,
+        paddleTexture.width * scale,
+        paddleTexture.height * scale
+    };
+
+
     DrawText(TextFormat("%i",leftPaddle.score), 10, 10, 40, PURPLE);
     DrawText(TextFormat("%i",rightPaddle.score), 1140, 10, 40, PURPLE);
 
-    DrawRectangle(leftPaddle.posX,(int)leftPaddle.posY,width,height,PURPLE);
+    
+
+    DrawTexturePro(paddleTexture, source, dest, origin, rotation, WHITE);
+    //DrawRectangle(leftPaddle.posX,(int)leftPaddle.posY,width,height,PURPLE);
     DrawRectangle(rightPaddle.posX,(int)rightPaddle.posY,width,height,PURPLE);
     DrawCircle((int)ball.posX,(int)ball.posY,ball.radius,BLACK);
     EndDrawing();
@@ -105,14 +122,61 @@ void GameDraw()
 void UpdatePlayer()
 {
     float speed=400.0f;
+    float leftSpeed = 0.0f;
+    float rightSpeed = 0.0f;
+    float paddleAcceleration = 700.0f;
+    float maxSpeed = 200000.0f;
+    float friction = 200.0f;
+
     if(IsKeyDown(KEY_W))
-        leftPaddle.posY -= GetFrameTime()*speed;
-    if(IsKeyDown(KEY_S))
-        leftPaddle.posY += GetFrameTime()*speed;
+    {
+        leftSpeed -= paddleAcceleration;
+        if(leftSpeed<-maxSpeed) leftSpeed = -maxSpeed;
+        //leftPaddle.posY -= GetFrameTime()*speed;
+    }
+    else if(IsKeyDown(KEY_S))
+    {
+        leftSpeed += paddleAcceleration;
+        if(leftSpeed>maxSpeed) leftSpeed = maxSpeed;
+        //leftPaddle.posY += GetFrameTime()*speed;
+    }
+    else
+    {
+        if(leftSpeed>0){
+            leftSpeed -= friction*GetFrameTime();
+            if(leftSpeed<0) leftSpeed=0;
+        }
+        else if(leftSpeed<0){
+            leftSpeed += friction*GetFrameTime();
+            if(leftSpeed>0) leftSpeed=0;
+        }
+    }
+
     if(IsKeyDown(KEY_UP))
-        rightPaddle.posY -= GetFrameTime()*speed;
-    if(IsKeyDown(KEY_DOWN))
-        rightPaddle.posY += GetFrameTime()*speed;
+    {
+        rightSpeed -= paddleAcceleration;
+        if(rightSpeed<-maxSpeed) rightSpeed = -maxSpeed;
+    }        
+    else if(IsKeyDown(KEY_DOWN))
+    {
+        rightSpeed += paddleAcceleration;
+        if(rightSpeed>maxSpeed) rightSpeed = maxSpeed;
+    }
+    else
+    {
+        if(rightSpeed>0){
+            rightSpeed -= friction*GetFrameTime();
+            if(rightSpeed<0) rightSpeed=0;
+        }
+        else if(rightSpeed<0){
+            rightSpeed += friction*GetFrameTime();
+            if(rightSpeed>0) rightSpeed=0;
+        }
+    }
+
+    leftPaddle.posY += leftSpeed * GetFrameTime();
+    rightPaddle.posY += rightSpeed * GetFrameTime();
+        
 }
 
 void Score()
@@ -193,6 +257,8 @@ int main()
     
     GameInit();
     Sound hit = LoadSound("resources/hit.wav");
+    Texture2D paddleTexture = LoadTexture("resources/paddle.png");
+    SetTextureFilter(paddleTexture, TEXTURE_FILTER_BILINEAR);
     while (!WindowShouldClose())
     {
         if (!GameUpdate())
@@ -202,8 +268,9 @@ int main()
         Wall();
         Hit(hit);
         Score();
-        GameDraw();
+        GameDraw(paddleTexture);
     }
+    UnloadTexture(paddleTexture);
     UnloadSound(hit);
     CloseAudioDevice();
     GameCleanup();
