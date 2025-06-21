@@ -30,8 +30,8 @@ Use this as a starting point or replace it with your code.
 
 #define SPEEDX 500
 #define SPEEDY 300
-int width = 40;
-int height = 100;
+int width = 12;
+int height = 76;
 typedef struct Paddle
 {
     int posX; 
@@ -110,11 +110,19 @@ void GameDraw(Texture2D paddleTexture)
     DrawText(TextFormat("%i",leftPaddle.score), 10, 10, 40, PURPLE);
     DrawText(TextFormat("%i",rightPaddle.score), 1140, 10, 40, PURPLE);
 
-    
-
+    Rectangle rSource = {0,0,-paddleTexture.width, paddleTexture.height};
+    Vector2 rOrigin = { paddleTexture.width / 2.0f, paddleTexture.height / 2.0f};
+    Vector2 rPosition = { rightPaddle.posX, rightPaddle.posY };
+    Rectangle rDest = {
+        rPosition.x,
+        rPosition.y,
+        paddleTexture.width * scale,
+        paddleTexture.height * scale
+    };
     DrawTexturePro(paddleTexture, source, dest, origin, rotation, WHITE);
     //DrawRectangle(leftPaddle.posX,(int)leftPaddle.posY,width,height,PURPLE);
-    DrawRectangle(rightPaddle.posX,(int)rightPaddle.posY,width,height,PURPLE);
+    //DrawRectangle(rightPaddle.posX,(int)rightPaddle.posY,width,height,PURPLE);
+    DrawTexturePro(paddleTexture, rSource, rDest, rOrigin, rotation, WHITE);
     DrawCircle((int)ball.posX,(int)ball.posY,ball.radius,BLACK);
     EndDrawing();
 }
