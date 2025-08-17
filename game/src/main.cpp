@@ -30,27 +30,23 @@ Use this as a starting point or replace it with your code.
 
 #define SPEEDX 500
 #define SPEEDY 300
-int width = 12;
-int height = 76;
+float width = 14.0f;
+float height = 80.0f;
+Sound hit; // Declare a global Sound variable
 typedef struct Paddle
 {
     int posX; 
     float posY;
     int score;
 }Paddle;
+int leftScore;
+int rightScore;
 
-typedef struct Ball
-{    
-    int speedX;
-    int speedY;
-    float posX;
-    float posY;
-    float width;
-    float height;
-}Ball;
-
-Paddle leftPaddle,rightPaddle;
-Ball ball;
+Rectangle ball, leftPaddle, rightPaddle;
+float ballSpeedX = SPEEDX;
+float ballSpeedY = SPEEDY;
+// Paddle leftPaddle,rightPaddle;
+// Ball ball;
 void GameInit()
 {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
@@ -58,24 +54,13 @@ void GameInit()
     InitAudioDevice();
     
     SetTargetFPS(144);
-
-    // load resources
-     
-    leftPaddle.posX=0;
-    leftPaddle.posY=400-(int)(height/2);
-    leftPaddle.score=0;
     
-
-    rightPaddle.posX=1200-width;
-    rightPaddle.posY=400-(int)(height/2);
-    rightPaddle.score=0;
-
-    ball.width = 20;
-    ball.height = 20;
-    ball.posX = 600;
-    ball.posY = 400;
-    ball.speedX = SPEEDX;
-    ball.speedY = SPEEDY;    
+    leftScore = 0;
+    rightScore = 0;
+    leftPaddle = {0,400,width,200};
+    rightPaddle = {GetScreenWidth()-width,400,width,200};    
+    ball = {600,400,20,20,};
+    
 }
 
 void GameCleanup()
@@ -95,12 +80,12 @@ void GameDraw(Texture2D paddleTexture)
     BeginDrawing();
     ClearBackground(DARKGRAY);
 
-    Vector2 leftPosition = {leftPaddle.posX, leftPaddle.posY};
+    Vector2 leftPosition = {leftPaddle.x, leftPaddle.y};
     float scale = 2.0f;
     float rotation = 0.0f;
     Rectangle source = { 0, 0, paddleTexture.width, paddleTexture.height };
     Vector2 origin = { paddleTexture.width / 2.0f, paddleTexture.height / 2.0f };
-    Vector2 position = { leftPaddle.posX, leftPaddle.posY };
+    Vector2 position = { leftPaddle.x, leftPaddle.y };
     Rectangle dest = {
         position.x,
         position.y,
@@ -109,24 +94,24 @@ void GameDraw(Texture2D paddleTexture)
     };
 
 
-    DrawText(TextFormat("%i",leftPaddle.score), 10, 10, 40, PURPLE);
-    DrawText(TextFormat("%i",rightPaddle.score), 1140, 10, 40, PURPLE);
+    DrawText(TextFormat("%i",leftScore), 10, 10, 40, PURPLE);
+    DrawText(TextFormat("%i",rightScore), 1140, 10, 40, PURPLE);
 
     Rectangle rSource = {0,0,-paddleTexture.width, paddleTexture.height};
     Vector2 rOrigin = { paddleTexture.width / 2.0f, paddleTexture.height / 2.0f};
-    Vector2 rPosition = { rightPaddle.posX, rightPaddle.posY };
+    Vector2 rPosition = { rightPaddle.x, rightPaddle.y };
     Rectangle rDest = {
         rPosition.x,
         rPosition.y,
         paddleTexture.width * scale,
         paddleTexture.height * scale
     };
-    DrawTexturePro(paddleTexture, source, dest, origin, rotation, WHITE);
-    //DrawRectangle(leftPaddle.posX,(int)leftPaddle.posY,width,height,PURPLE);
-    //DrawRectangle(rightPaddle.posX,(int)rightPaddle.posY,width,height,PURPLE);
+    //DrawTexturePro(paddleTexture, source, dest, origin, rotation, WHITE);
+    DrawRectangle(leftPaddle.x,leftPaddle.y,leftPaddle.width,leftPaddle.height,PURPLE);
+    DrawRectangle(rightPaddle.x,rightPaddle.y,rightPaddle.width,rightPaddle.height,PURPLE);
     //DrawRectangle(ball.posX,ball.posY,ball.width,ball.height,BLACK);
-    DrawTexturePro(paddleTexture, rSource, rDest, rOrigin, rotation, WHITE);
-    DrawRectangle(ball.posX, ball.posY, ball.width, ball.height, BLACK);
+    //DrawTexturePro(paddleTexture, rSource, rDest, rOrigin, rotation, WHITE);
+    DrawRectangle(ball.x, ball.y, ball.width, ball.height, BLACK);
     EndDrawing();
 }
 
@@ -185,89 +170,118 @@ void UpdatePlayer()
         }
     }
 
-    leftPaddle.posY += leftSpeed * GetFrameTime();
-    rightPaddle.posY += rightSpeed * GetFrameTime();
+    leftPaddle.y += leftSpeed * GetFrameTime();
+    rightPaddle.y += rightSpeed * GetFrameTime();
         
 }
 
-void Score()
-{
-    if(ball.posX<-ball.width)
-    {
-        ball.posX=GetScreenWidth()/2;
-        ball.posY=GetScreenHeight()/2;
-        ball.speedX=SPEEDX;
-        rightPaddle.score++;
-    }
-    if(ball.posX+ball.width>GetScreenWidth())
-    {
-        ball.posX=GetScreenWidth()/2;
-        ball.posY=GetScreenHeight()/2;
-        ball.speedX=-SPEEDX;
-        leftPaddle.score++;
-    }
-}
+// void Score()
+// {
+//     if(ball.x<-ball.width)
+//     {
+//         ball.x=GetScreenWidth()/2;
+//         ball.posY=GetScreenHeight()/2;
+//         ball.speedX=SPEEDX;
+//         rightPaddle.score++;
+//     }
+//     if(ball.x+ball.width>GetScreenWidth())
+//     {
+//         ball.x=GetScreenWidth()/2;
+//         ball.posY=GetScreenHeight()/2;
+//         ball.speedX=-SPEEDX;
+//         leftPaddle.score++;
+//     }
+// }
 
-void Hit(Sound hit)
-{
-    //Vector2 circle = {ball.posX,ball.posY};
-    Rectangle rball = {
-        ball.posX,
-        ball.posY,
-        ball.width,
-        ball.height
-    };
-    Rectangle leftPaddleRec ={
-        leftPaddle.posX,
-        leftPaddle.posY,
-        width,
-        height+20       
-    };
-    Rectangle rightPaddleRec ={
-        rightPaddle.posX,
-        rightPaddle.posY,
-        width,
-        height+20       
-    };
+// void Hit(Sound hit)
+// {
+//     //Vector2 circle = {ball.x,ball.posY};
+//     Rectangle rball = {
+//         ball.x,
+//         ball.posY,
+//         ball.width,
+//         ball.height
+//     };
+//     Rectangle leftPaddleRec ={
+//         leftPaddle.posX,
+//         leftPaddle.posY-10,
+//         width,
+//         height+20       
+//     };
+//     Rectangle rightPaddleRec ={
+//         rightPaddle.posX,
+//         rightPaddle.posY- 10,
+//         width,
+//         height+20       
+//     };
     
-    if(CheckCollisionRecs(rball,leftPaddleRec))
-    {
-        PlaySound(hit);
-        if(ball.speedX<0)
-        {
-            ball.speedX = -ball.speedX;            
-        }
+//     if(CheckCollisionRecs(rball,leftPaddleRec))
+//     {
+//         PlaySound(hit);
+//         if(ball.speedX<0)
+//         {
+//             ball.speedX = -ball.speedX;            
+//         }
             
-        //ball.posX = leftPaddle.posX+width;        
+//         //ball.x = leftPaddle.posX+width;        
         
-    }
-    if(CheckCollisionRecs(rball,rightPaddleRec))
-    {
-        PlaySound(hit);
-        if(ball.speedX>0)
-        {
-            ball.speedX = -ball.speedX *1.03;
-            PlaySound(hit);
-        }
-        //ball.posX = rightPaddle.posX-width;
-    }    
+//     }
+//     if(CheckCollisionRecs(rball,rightPaddleRec))
+//     {
+//         PlaySound(hit);
+//         if(ball.speedX>0)
+//         {
+//             ball.speedX = -ball.speedX *1.03;
+//             PlaySound(hit);
+//         }
+//         //ball.x = rightPaddle.posX-width;
+//     }    
     
-}
+// }
 
 void UpdateBall()
 {
-    ball.posX += GetFrameTime()*ball.speedX;
-    ball.posY += GetFrameTime()*ball.speedY;
+    bool hitPaddle = false;
+
+    if((CheckCollisionRecs(ball,leftPaddle) && ball.x<leftPaddle.x+leftPaddle.width) || (CheckCollisionRecs(ball,rightPaddle) && ball.x+ball.width<rightPaddle.x+rightPaddle.width))
+    {
+        PlaySound(hit);        
+        ballSpeedX = -ballSpeedX;
+        hitPaddle = true; 
+        //ball.x = leftPaddle.posX+width;                
+    }
+    else if (ball.y < 0 || ball.y + ball.height > GetScreenHeight())
+        ballSpeedY = -ballSpeedY;
+    if(!hitPaddle)
+    {
+        if(ball.x<-ball.width)
+        {
+            ball.x=GetScreenWidth()/2;
+            ball.y=GetScreenHeight()/2;
+            ballSpeedX=SPEEDX;
+            rightScore++;
+        }
+        if(ball.x+ball.width>GetScreenWidth())
+        {
+            ball.x=GetScreenWidth()/2;
+            ball.y=GetScreenHeight()/2;
+            ballSpeedX=-SPEEDX;
+            leftScore++;
+        }
+    }
+    
+    ball.x += GetFrameTime()*ballSpeedX;
+    ball.y += GetFrameTime()*ballSpeedY;
     
 }
 
 void Wall()
 {
-    if(ball.posY<0)        
-        ball.speedY *=-1;
+    if(ball.y<0)        
+        ballSpeedY = -ballSpeedX;
     
-    if(ball.posY+ball.height>GetScreenHeight())
-        ball.speedY *=-1;
+    if(ball.y+ball.height>GetScreenHeight())
+        ballSpeedY = -ballSpeedY;
 
 }
 
@@ -275,7 +289,7 @@ int main()
 {
     
     GameInit();
-    Sound hit = LoadSound("resources/hit.wav");
+    hit = LoadSound("resources/hit.wav");
     Texture2D paddleTexture = LoadTexture("resources/paddle.png");
     SetTextureFilter(paddleTexture, TEXTURE_FILTER_BILINEAR);
     while (!WindowShouldClose())
@@ -284,9 +298,9 @@ int main()
             break;
         UpdatePlayer();
         UpdateBall();
-        Wall();
-        Hit(hit);
-        Score();
+        //Wall();
+        //Hit(hit);
+        //Score();
         GameDraw(paddleTexture);
     }
     UnloadTexture(paddleTexture);
